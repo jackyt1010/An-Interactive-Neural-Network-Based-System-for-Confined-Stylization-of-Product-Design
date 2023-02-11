@@ -1,0 +1,205 @@
+# -*- coding: utf-8 -*-
+
+import numpy as np
+import cv2
+import os
+import time
+import argparse
+import tensorflow as tf
+import distance_transform
+import utility
+import model
+
+###############################################################################
+# Constants for the image input and output.
+###############################################################################
+import tensorflow as tf
+import numpy as np
+import cv2
+import os
+import time
+import argparse
+
+import distance_transform
+import utility
+import model
+
+###############################################################################
+# Constants for the image input and output.
+###############################################################################
+
+# Output folder for the images.
+OUTPUT_DIR = 'output/'
+
+# Content image to use.
+content_input_path = "input/font_contents/"
+content_with_ext   = "lab6.jpg"
+content_image_path = content_input_path + content_with_ext
+content_image      = content_with_ext[:-4]
+
+# Style image to use.
+style_input_path   = "input/styles/"
+style_with_ext     = "flower.png"
+style_image_path   = style_input_path + style_with_ext
+style_image        = style_with_ext[:-4]
+
+# Invertion of images
+content_invert = 1
+style_invert = 1
+result_invert = content_invert
+###############################################################################
+# Algorithm constants
+###############################################################################
+
+# path to weights of VGG-19 model
+VGG_MODEL = "../imagenet-vgg-verydeep-19.mat"
+# The mean to subtract from the input to the VGG model. 
+MEAN_VALUES = np.array([123.68, 116.779, 103.939]).reshape((1,1,1,3))
+
+parser = argparse.ArgumentParser(description='A Neural Algorithm of Artistic Style')
+parser.add_argument('--w1', '-w1',type=float, default='1',help='w1')
+parser.add_argument('--w2', '-w2',type=float, default='1',help='w2')
+parser.add_argument('--w3', '-w3',type=float, default='1',help='w3')
+parser.add_argument('--w4', '-w4',type=float, default='1',help='w4')
+parser.add_argument('--w5', '-w5',type=float, default='1',help='w5')
+parser.add_argument("--IMAGE_WIDTH", "-width",type=int, default = 400, help = "width & height of image")
+parser.add_argument("--CONTENT_IMAGE", "-CONTENT_IMAGE", type=str, default = content_image_path, help = "Path to content image")
+parser.add_argument("--STYLE_IMAGE", "-STYLE_IMAGE", type=str, default = style_image_path, help = "Path to style image")
+
+parser.add_argument("--alpha",  "-alpha",type=float,  default="0.001",   help="alpha")
+parser.add_argument("--beta",   "-beta", type=float,  default="0.8",     help="beta")
+parser.add_argument("--gamma",  "-gamma",type=float,  default="0.001",    help="gamma")
+parser.add_argument("--epoch",  "-epoch",type=int, default=5000, help="number of epochs to run" )
+args = parser.parse_args()
+
+# Number of iterations to run.
+ITERATIONS = args.epoch
+
+# Image dimensions constants. 
+# image = Image.open(content_image_path)  
+#IMAGE_WIDTH = image.size[0]
+IMAGE_WIDTH = args.IMAGE_WIDTH
+IMAGE_HEIGHT = IMAGE_WIDTH
+COLOR_CHANNELS = 3
+
+# Style image layer weights
+w1 = args.w1
+w2 = args.w2
+w3 = args.w3
+w4 = args.w4
+w5 = args.w5
+
+# Content & Style weights
+alpha = args.alpha
+beta = args.beta
+gamma = args.gamma
+
+CONTENT_IMAGE = args.CONTENT_IMAGE
+STYLE_IMAGE = args.STYLE_IMAGE
+
+# Splitting content path & name
+dot = 0
+slash = 0
+for c in reversed(CONTENT_IMAGE):
+    dot += 1
+    if c == ".":
+        break
+for c in reversed(CONTENT_IMAGE):
+    slash += 1 
+    if c =="/" or c =="\\":
+        break
+content_path = CONTENT_IMAGE[:1-slash]
+content_name = CONTENT_IMAGE[1-slash:-dot]
+
+# Splitting style path & name
+dot = 0 
+slash = 0 
+for c in reversed(STYLE_IMAGE):
+    dot += 1
+    if c == ".":
+        break
+for c in reversed(STYLE_IMAGE):
+    slash += 1
+    if c == "/" or c =="\\":
+        break
+style_path = STYLE_IMAGE[:1-slash]
+style_name = STYLE_IMAGE[1-slash:-dot]
+
+###############################################################################
+
+def style_loss_func(sess, model):
+    """
+    Style loss function as defined in the paper.
+    """
+    def gram_matrix(F, N, M):
+        """
+        The gram matrix G.
+        """
+        Ft = tf.reshape(F, (M, N))
+        return tf.matmul(tf.transpose(Ft), Ft)
+
+    def style_loss(a, x):
+        """
+        The style loss calculation.
+        """
+        # N is the number of filters (at layer l).
+        N = a.shape[3]
+        # M is the height times the width of the feature map (at layer l).
+        M = a.shape[1] * a.shape[2]
+        # A is the style representation of the original image (at layer l).
+        A = gram_matrix(a, N, M)
+        # G is the style representation of the generated image (at layer l).
+        G = gram_matrix(x, N, M)
+        result = (1 / (4 * N**2 * M**2)) * tf.reduce_sum(tf.pow(G - A, 2))
+        return result
+
+    # Style layers to use.
+    layers = [
+            ('conv1_2', w1),
+            ('conv2_2', w2),
+            ('conv3_2', w3),
+            ('conv4_2', w4),
+            ('conv5_2', w5),
+            ]
+
+    E = [style_loss(sess.run(model[layer_name]), model[layer_name]) for layer_name, _ in layers]
+    W = [w for _, w in layers]
+    loss = sum([W[l] * E[l] for l in range(len(layers))])
+    return loss
+
+def content_loss_func(sess, model):
+    """
+    Content loss function as defined in the paper.
+    """
+    def content_loss(p, x):
+
+        return 0.5 * tf.reduce_sum(tf.pow(x - p, 2))
+    loss = content_loss(sess.run(model['conv4_2']), model['conv4_2'])
+    return loss
+
+def content_dist(sess, model):
+
+    dist, dist_sum = distance_transform.dist_t(sess.run(model["input"]))
+    return tf.convert_to_tensor(dist, dtype=tf.float32), dist_sum
+
+def shape_loss_func(sess, model, dist_template, dist_sum):
+
+    content_image = sess.run(model['input'])
+    mixed_image   = model["input"]
+
+    # Convert to grayscale
+    content_image = tf.image.rgb_to_grayscale(content_image)
+    mixed_image   = tf.image.rgb_to_grayscale(mixed_image)
+
+    # Remove dimensions of size 1 from the shape of a tensor
+    content_image = tf.squeeze(content_image)
+    mixed_image   = tf.squeeze(mixed_image)
+
+    # Pixel-wise multiplication
+    content_dist  = content_image * dist_template
+    mixed_dist    = mixed_image   * dist_template
+
+    loss_tensor = 0.5 * tf.reduce_sum(tf.pow(content_dist-mixed_dist, 2))
+
+    return loss_tensor
+    
