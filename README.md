@@ -32,4 +32,5 @@ This project is licensed under MIT.
 ## Reference
 
 * [Constrained Neural Style Transfer for Decorated Logo Generation](https://github.com/gttugsuu/Constrained-Neural-Style-Transfer-for-Decorated-Logo-Generation)
+* [Grab Cut Algorithm Implementation](https://github.com/louisfb01/iterative-grabcut)
 * [The Music used for the creation of the demo video](https://imperss.bandcamp.com/track/reflection)
