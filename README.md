@@ -15,7 +15,7 @@ of the product image.
 - [Reference](#Reference)
 
 ## Requirement
-Operating system: Windows 10
+Operating system: Windows 10 <br />
 Programming Langauge: Python 3.10.0
 
 ## Execution
