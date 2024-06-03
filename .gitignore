@@ -1,0 +1,4 @@
+__pycache__/
+*.wav
+keys.py
+.venv/
