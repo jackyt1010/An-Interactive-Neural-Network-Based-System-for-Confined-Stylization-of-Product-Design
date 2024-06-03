@@ -1,25 +1,15 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Fri Sep 22 20:59:50 2017
 
+@author: GT
+"""
 import numpy as np
 import cv2
 import os
 import time
 import argparse
 import tensorflow as tf
-import distance_transform
-import utility
-import model
-
-###############################################################################
-# Constants for the image input and output.
-###############################################################################
-import tensorflow as tf
-import numpy as np
-import cv2
-import os
-import time
-import argparse
-
 import distance_transform
 import utility
 import model
@@ -29,7 +19,7 @@ import model
 ###############################################################################
 
 # Output folder for the images.
-OUTPUT_DIR = 'output/'
+OUTPUT_DIR = 'Stylization/output/'
 
 # Content image to use.
 content_input_path = "input/font_contents/"
@@ -52,7 +42,7 @@ result_invert = content_invert
 ###############################################################################
 
 # path to weights of VGG-19 model
-VGG_MODEL = "../imagenet-vgg-verydeep-19.mat"
+VGG_MODEL = "imagenet-vgg-verydeep-19.mat"
 # The mean to subtract from the input to the VGG model. 
 MEAN_VALUES = np.array([123.68, 116.779, 103.939]).reshape((1,1,1,3))
 
@@ -69,7 +59,7 @@ parser.add_argument("--STYLE_IMAGE", "-STYLE_IMAGE", type=str, default = style_i
 parser.add_argument("--alpha",  "-alpha",type=float,  default="0.001",   help="alpha")
 parser.add_argument("--beta",   "-beta", type=float,  default="0.8",     help="beta")
 parser.add_argument("--gamma",  "-gamma",type=float,  default="0.001",    help="gamma")
-parser.add_argument("--epoch",  "-epoch",type=int, default=5000, help="number of epochs to run" )
+parser.add_argument("--epoch",  "-epoch",type=int, default=1000, help="number of epochs to run" )
 args = parser.parse_args()
 
 # Number of iterations to run.
@@ -109,7 +99,8 @@ for c in reversed(CONTENT_IMAGE):
     if c =="/" or c =="\\":
         break
 content_path = CONTENT_IMAGE[:1-slash]
-content_name = CONTENT_IMAGE[1-slash:-dot]
+#content_name = CONTENT_IMAGE[1-slash:-dot]
+content_name = CONTENT_IMAGE
 
 # Splitting style path & name
 dot = 0 
@@ -123,8 +114,8 @@ for c in reversed(STYLE_IMAGE):
     if c == "/" or c =="\\":
         break
 style_path = STYLE_IMAGE[:1-slash]
-style_name = STYLE_IMAGE[1-slash:-dot]
-
+#style_name = STYLE_IMAGE[1-slash:-dot]
+style_name = STYLE_IMAGE
 ###############################################################################
 
 def style_loss_func(sess, model):
@@ -203,3 +194,75 @@ def shape_loss_func(sess, model, dist_template, dist_sum):
 
     return loss_tensor
     
+if __name__ == '__main__':
+    try:
+        OUTPUT_DIR = ("output/" + content_name + "_vs_" + style_name)
+        os.mkdir(OUTPUT_DIR)
+    except:
+        pass
+    start_time = time.time()
+    
+    with tf.device("/gpu:0"):
+        with tf.compat.v1.Session() as sess:          
+
+            # Load images.
+            content_image = utility.load_image(CONTENT_IMAGE, IMAGE_HEIGHT, IMAGE_WIDTH, invert = content_invert)
+            style_image   = utility.load_image(STYLE_IMAGE, IMAGE_HEIGHT, IMAGE_WIDTH, invert = style_invert)
+            # utility.save_image(OUTPUT_DIR+"/"+style_name+".png", style_image, invert = style_invert)
+            
+            # Load the model.
+            model = model.load_vgg_model(VGG_MODEL, IMAGE_HEIGHT, IMAGE_WIDTH, 3)
+            # Content image as input image
+            initial_image = content_image.copy()
+            # Initialize all variables
+            sess.run(tf.compat.v1.global_variables_initializer())
+            
+            # Construct content_loss using content_image.
+            sess.run(model['input'].assign(content_image))
+            content_loss = content_loss_func(sess, model)
+
+            # Construct shape loss using content image
+            sess.run(model["input"].assign(initial_image))
+            dist_template_inf, content_dist_sum = distance_transform.dist_t(content_image)
+            ### take power of distance template
+            dist_template = np.power(dist_template_inf,8)
+            dist_template[dist_template>np.power(2,30)] = np.power(2,30)
+            
+            shape_loss = shape_loss_func(sess, model, dist_template, content_dist_sum)
+    
+            # Construct style_loss using style_image.
+            sess.run(model['input'].assign(style_image))
+            style_loss = style_loss_func(sess, model)
+            
+            # Instantiate equation 7 of the paper.
+            total_loss = alpha * content_loss + beta * style_loss + gamma * shape_loss
+    
+            # Then we minimize the total_loss, which is the equation 7.
+            optimizer =  tf.compat.v1.train.AdamOptimizer(1.0)
+            train_step = optimizer.minimize(total_loss)
+    
+            sess.run(tf.compat.v1.global_variables_initializer())
+            sess.run(model['input'].assign(initial_image))
+            for it in range(ITERATIONS+1):
+                sess.run(train_step)
+                
+                if it%100 == 0:
+                    # Print every 100 iteration.
+                    mixed_image = sess.run(model['input'])
+                    print('Iteration %d' % (it))
+                    print('sum         : ', sess.run(tf.reduce_sum(mixed_image)))
+                    print('total_loss  : ', sess.run(total_loss))
+                    print("content_loss: ", alpha*sess.run(content_loss))
+                    print("style_loss  : ", beta *sess.run(style_loss))
+                    print("shape loss  : ", gamma*sess.run(shape_loss))
+    
+                    if not os.path.exists(OUTPUT_DIR):
+                        os.mkdir(OUTPUT_DIR)
+    
+                    filename = OUTPUT_DIR + '/%d.jpg' % (it)
+                    utility.save_image(filename, mixed_image, invert = result_invert)
+                if sess.run(total_loss) < 1:
+                    break
+        sess.close()
+    end_time = time.time()
+    print("Time taken = ", end_time - start_time)

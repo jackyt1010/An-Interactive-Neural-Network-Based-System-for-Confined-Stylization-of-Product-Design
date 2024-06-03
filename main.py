@@ -1,178 +1,242 @@
-import sys
-import os
-import argparse
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QPushButton, QMainWindow
-from PyQt5.QtCore import Qt, QPoint, QRect
-from PyQt5.QtGui import QPixmap, QPainter
-import cv2
-import tensorflow as tf
+import customtkinter as ctk
+from customtkinter import filedialog
+from PIL import Image
 import numpy as np
+import cv2
+from matplotlib import pyplot as plt
+from matplotlib import patches
 from StyleTransfer import *
 import distance_transform
 import utility
 from model import *
+from pathlib import Path
+import tensorflow as tf
 import time
-import scipy.misc
-import scipy.io
-from gui import Ui_MainWindow
-
-# Output folder for the images.
-OUTPUT_DIR = '/Stylization/Output/'
-
-# Content image to use.
-content_input_path = "input/font_contents/"
-content_with_ext   = "lab6.jpg"
-content_image_path = content_input_path + content_with_ext
-content_image      = content_with_ext[:-4]
-
-# Style image to use.
-style_input_path   = "input/styles/"
-style_with_ext     = "flower.png"
-style_image_path   = style_input_path + style_with_ext
-style_image        = os.getcwd() + "\Stylization\Style\style.jpg"
-
-# Invertion of images
-content_invert = 1
-style_invert = 1
-result_invert = content_invert
-###############################################################################
-# Algorithm constants
-###############################################################################
-
-# path to weights of VGG-19 model
-VGG_MODEL = "imagenet-vgg-verydeep-19.mat"
-# The mean to subtract from the input to the VGG model.
-MEAN_VALUES = np.array([123.68, 116.779, 103.939]).reshape((1,1,1,3))
-
-parser = argparse.ArgumentParser(description='A Neural Algorithm of Artistic Style')
-parser.add_argument('--w1', '-w1',type=float, default='1',help='w1')
-parser.add_argument('--w2', '-w2',type=float, default='1',help='w2')
-parser.add_argument('--w3', '-w3',type=float, default='1',help='w3')
-parser.add_argument('--w4', '-w4',type=float, default='1',help='w4')
-parser.add_argument('--w5', '-w5',type=float, default='1',help='w5')
-parser.add_argument("--IMAGE_WIDTH", "-width",type=int, default = 400, help = "width & height of image")
-parser.add_argument("--CONTENT_IMAGE", "-CONTENT_IMAGE", type=str, default = content_image_path, help = "Path to content image")
-parser.add_argument("--STYLE_IMAGE", "-STYLE_IMAGE", type=str, default = style_image_path, help = "Path to style image")
-
-parser.add_argument("--alpha",  "-alpha",type=float,  default="0.001",   help="alpha")
-parser.add_argument("--beta",   "-beta", type=float,  default="0.8",     help="beta")
-parser.add_argument("--gamma",  "-gamma",type=float,  default="0.001",    help="gamma")
-parser.add_argument("--epoch",  "-epoch",type=int, default=50, help="number of epochs to run" )
-args = parser.parse_args()
-
-# Number of iterations to run.
-ITERATIONS = args.epoch
-
-# Image dimensions constants.
-# image = Image.open(content_image_path)
-#IMAGE_WIDTH = image.size[0]
-IMAGE_WIDTH = args.IMAGE_WIDTH
-IMAGE_HEIGHT = IMAGE_WIDTH
-COLOR_CHANNELS = 3
-
-# Style image layer weights
-w1 = args.w1
-w2 = args.w2
-w3 = args.w3
-w4 = args.w4
-w5 = args.w5
-
-# Content & Style weights
-alpha = args.alpha
-beta = args.beta
-gamma = args.gamma
-
-
 import sys
-from PyQt5.QtWidgets import QWidget, QProgressBar, QPushButton, QApplication
-from PyQt5.QtCore import QBasicTimer
+import os
 
+def drawLine(event,x,y,flags,params):
+    fgdModel = np.zeros((1, 65), np.float64)
+    bgdModel = np.zeros((1, 65), np.float64)
+    ixLineAdd, iyLineAdd, ixLineRemove, iyLineRemove, ix, iy, drawing, color, whichClick,imageHeight, imageWidth, lineAdd, lineRemove, img, mask, originalImage, grabcut_textbox = params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7],  params[8], params[9], params[11], params[12],  params[13],  params[14], params[15], params[16], params[17]
+   # global ixLineAdd,iyLineAdd,ixLineRemove, iyLineRemove, ix, iy, drawing, color, whichClick, imageHeight, imageWidth, lineAdd, lineRemove
+    # Left Mouse Button Down Pressed
+    if(event==1):
+        drawing = True
+        color = 50
+        whichClick = 1
+        ix = x
+        iy = y
+    # Right mouse button Down Pressed
+    if(event==2):
+        drawing = True
+        color = 50
+        whichClick = 2
+        ix = x
+        iy = y
+   # if(event==0):
+    if(drawing==True):
+            ix = x
+            iy = y
+            #For Drawing Line
+            #cv2.line(img,pt1=(ix,iy),pt2=(x,y),color=(0,255,0),thickness=3)
+          
+            if(whichClick == 1):
+                for i in range(0, 5):
+                    if(((ix+i) < imageWidth) and ((ix-i) >= 0)):
+                        #print(ix+i,i)
+                        ixLineAdd.append(ix+i)
+                    if(((iy+i) < imageHeight) and ((iy-i) >= 0)):    
+                        iyLineAdd.append(iy+i)
+                    if(((ix-i) >= 0) and ((ix+i) < imageWidth)):
+                        ixLineAdd.append(ix-i)
+                    if(((iy-i) >= 0) and ((iy+i) < imageHeight)):
+                        iyLineAdd.append(iy-i)
+            elif(whichClick==2):
+                for i in range(0, 5):
+                    if(((ix+i) < imageWidth) and ((ix-i) >= 0)):
+                        #print(ix+i,i)
+                        ixLineRemove.append(ix+i)
+                    if(((iy+i) < imageHeight) and ( (iy-i) >= 0)):
+                        iyLineRemove.append(iy+i)
+                    if(((ix-i) >= 0) and ((ix+i) < imageWidth)):
+                        ixLineRemove.append(ix-i)
+                    if(((iy-i) >= 0) and ((iy+i) < imageHeight)):
+                        iyLineRemove.append(iy-i)
+                    #print(ixLineRemove,i)
+                
+    # Mouse button released
+    if(event==4 or event==5):
+        drawing = False
+        if(len(iyLineAdd)>0 and len(ixLineAdd)>0):
+            n = min(len(iyLineAdd), len(ixLineAdd))
+            lineAdd = np.vstack((iyLineAdd[:n], ixLineAdd[:n])).T
+            #iyLineAdd = np.unique(iyLineAdd, axis=0)
+            #ixLineAdd = np.unique(ixLineAdd, axis=0)
+        if(len(iyLineRemove)>0 and len(ixLineRemove)>0):
+            n = min(len(iyLineRemove), len(ixLineRemove))
+            lineRemove = np.vstack((iyLineRemove[:n], ixLineRemove[:n])).T
+            #iyLineRemove = np.unique(iyLineRemove, axis=0)
+            #ixLineRemove = np.unique(ixLineRemove, axis=0)
+    if len(lineAdd)>0:
+        mask[lineAdd[:,0],lineAdd[:,1]] = 1
+    if len(lineRemove)>0:
+        mask[lineRemove[:,0],lineRemove[:,1]] = 0
+    #Grabcut algorithm with template mask, save the mask before the grabcut changes it
+    maskTmp = mask.copy()
+    mask, bgdModel, fgdModel = cv2.grabCut(img,mask,None,bgdModel,fgdModel,25,cv2.GC_INIT_WITH_MASK)
+    mask = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+    imgTmp = originalImage*mask[:,:,np.newaxis]
 
+def GrabCut(grabcut_textbox):
+   current_dir = current_directory = os.path.dirname(os.path.abspath(__file__))
+   fileName = 'original.jpg'
+   img = cv2.imread(current_dir+'/images/'+fileName)[:,:,::-1]
+   mask = np.zeros(img.shape[:2],np.uint8)
+   imgTmp = img.copy()
+   originalImage = img.copy()
+# GrabCut parameters
+   bgdModel = np.zeros((1,65),np.float64)
+   fgdModel = np.zeros((1,65),np.float64)
+   params = [imgTmp]
+   drawing = False
 
-class MyMainWindow(QMainWindow, Ui_MainWindow):
-    def click_pushButton_01(self):
-        self.lineEdit.setText("1. Open Content Image")
-        contentImgName = QFileDialog.getOpenFileName(self, 'Open file')[0]
-        contentImg = cv2.imread(contentImgName,  cv2.IMREAD_UNCHANGED)
-        resContent = cv2.resize(contentImg, (400, 400), interpolation = cv2.INTER_AREA)
-        resContentName = os.getcwd() + "\Stylization\Content\content.jpg"
-        cv2.imwrite(resContentName, resContent)
-        self.plainTextEdit.appendPlainText("1 Opened Content Image " + contentImgName)
-        self.stackedWidget.setCurrentIndex(0)
-        self.label_1.setPixmap(QtGui.QPixmap(resContentName))
-        return
-
-    def click_pushButton_02(self):
-        self.lineEdit.setText("2. Open Style Image")
-        styleImgName = QFileDialog.getOpenFileName(self, 'Open file')[0]
-        styleImg = cv2.imread(styleImgName, cv2.IMREAD_UNCHANGED)
-        resstyle = cv2.resize(styleImg, (400, 400), interpolation=cv2.INTER_AREA)
-        resstyleName = os.getcwd() + "\Stylization\Style\style.jpg"
-        cv2.imwrite(resstyleName, resstyle)
-        self.plainTextEdit.appendPlainText("2 Opened Style Image " + styleImgName)
-        self.label_2.setPixmap(QtGui.QPixmap(resstyleName))
-        return
-
-
-    def click_pushButton_03(self):
-        self.lineEdit.setText("3. Image Segmentation for the Content Image")
-        resContentName = os.getcwd() + "\Stylization\Content\content.jpg"
-        img = cv2.imread(resContentName)
-        self.plainTextEdit.appendPlainText("3 Extracting the product shape from the Content Image "+resContentName)
-
-        copy = img.copy()
-        # Connect the mouse button to our callback function
-
-       # param = [img]
-        #cv2.setMouseCallback("Rectangle Window", click_and_crop, param)
-        x, y, w, h = cv2.selectROI("Select the Area", img)
-        start = (x, y)
-        end = (x + w, y + h)
-        rect = (x, y, w, h)
+# ## Select a rectangle for the foreground, press 'q' when finished!
+# Show rectangle including foreground item on image
+   x, y, w, h = cv2.selectROI("Select the Target Area", img)
+   start = (x, y)
+   end = (x + w, y + h)
+   rect = (x, y, w, h)
       #  cv2.rectangle(copy, start, end, (0, 0, 255), 3)
-        h, w = copy.shape[:2]
-        mask = np.zeros(copy.shape[:2], np.uint8)
-        fgdModel = np.zeros((1, 65), np.float64)
-        bgdModel = np.zeros((1, 65), np.float64)
-        cv2.grabCut(img, mask, rect, bgdModel, fgdModel, 20, cv2.GC_INIT_WITH_RECT)
-        mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
-        eximg = img * mask2[:, :, np.newaxis]
-        copy = eximg.copy()
-        h, w = eximg.shape[:2]
-        mask = np.zeros([h + 2, w + 2], np.uint8)
-        cv2.floodFill(eximg, mask, (0, 0), (255, 255, 255), (3, 151, 65), (3, 151, 65), flags=8)
-        cv2.floodFill(eximg, mask, (38, 313), (255, 255, 255), (3, 151, 65), (3, 151, 65), flags=8)
-        cv2.floodFill(eximg, mask, (363, 345), (255, 255, 255), (3, 151, 65), (3, 151, 65), flags=8)
+   h, w = img.shape[:2]
+   imageHeight, imageWidth = h, w 
+   mask = np.zeros(img.shape[:2], np.uint8)
+   cv2.grabCut(img,mask,rect,bgdModel,fgdModel,30,cv2.GC_INIT_WITH_RECT)
 
-        # write result to disk
-        cv2.imwrite(os.getcwd() + "\Stylization\Segmented Content\extracted.jpg", eximg)
+# Show current image only with rectangle
+   mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+   img = img*mask2[:,:,np.newaxis]
+# Making Window For The Image
+   
+# Adding Mouse CallBack Event
+
+# Starting The Loop So Image Can Be Shown and allow exit on "Q" key pressed
+   #while(True):
+   #    if cv2.waitKey(20) & 0xFF == 13:
+   #        break
+           
+  # cv2.destroyAllWindows()
+  # figure, ax = plt.subplots(1)
+
+ 
+
+# ## First pass of the GrabCut Algorithm
 
 
-        cv2.imwrite(os.getcwd() + "\Stylization\Segmented Content\extracted.jpg", eximg)
-        cv2.imshow("Extracted Image", eximg)
-        self.label_3.setPixmap(QtGui.QPixmap(os.getcwd() + "\Stylization\Segmented Content\extracted.jpg"))
-        resstyleName = os.getcwd() + "\Stylization\Style\style.jpg"
-        self.label_4.setPixmap(QtGui.QPixmap(resstyleName))
-        self.plainTextEdit.appendPlainText("3 Extracted and Saved the Image as "+os.getcwd() + "\Stylization\Segmented Content\extracted.jpg")
-        #CONTENT_IMAGE = os.getcwd() + "\Stylization\Segmented Content\extracted.jpg"
-        #STYLE_IMAGE =  resstyleName
-        return
+# ## Loop with user interaction until satisfied
+# ### Press 'q' to close the window!
 
-    def click_pushButton_04(self):
-        OUTPUT_DIR = os.getcwd()+ '/Stylization/Output/' + str(time.time())
-        start_time =  time.time()
-        self.lineEdit.setText("4. Stylize the Content Image")
+# In[6]:
+# Loop for the algorithm
+   counter = 0
+   params=[]
+   while(True):
+    
+    # Variables used
+       drawing = False
+       params.append(drawing)
+       ixLineAdd, iyLineAdd,ixLineRemove, iyLineRemove, ix, iy, whichClick = [], [],[], [], 0, 0, 0
+       lineAdd = []
+       lineRemove = []
+       imgTmp = img.copy()
+       color = 50
+      # if counter > 0:
+      #     mask = maskTmp.copy()
+    # After the first iteration, replace the mask since it was converted from [0:3] to [0:1]
+       params = [0]*18
+       params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7],  params[8], params[9], params[11], params[12],  params[13], params[14], params[15], params[16], params[17]  =ixLineAdd, iyLineAdd, ixLineRemove, iyLineRemove, ix, iy, drawing, color, whichClick,imageHeight, imageWidth, lineAdd, lineRemove, img, mask, originalImage, grabcut_textbox
+    # Making Window For The Image
+       cv2.namedWindow("Draw Lines to Better cut the target Image")
+    # Adding Mouse CallBack Event
+       cv2.imshow("Draw Lines to Better cut the target Image",img)
+    # Starting The Loop So Image Can Be Shown
+       while(True):
+           cv2.setMouseCallback("Draw Lines to Better cut the target Image",drawLine, params)
+    # Edit the mask for the algorithm based on the user's inputs
+           if cv2.waitKey(20) & 0xFF == 13:
+               break
+       counter = counter + 1
+       break
+   cv2.destroyAllWindows()
+    # Show final result and ask to continue the algorithm or not
+      # print("Final result: ")
+      # plt.imshow(img),plt.show()
+      # if input('Would you like to continue editing?\n') != 'y':
+      #     break
+      # clear_output(wait=True)
+
+
+# ## Save & remove background
+
+# In[7]:
+   mask = np.zeros([h + 2, w + 2], np.uint8)
+   cv2.floodFill(img, mask, (0, 0), (255, 255, 255), (3, 151, 65), (3, 151, 65), flags=8)
+   cv2.floodFill(img, mask, (38, 313), (255, 255, 255), (3, 151, 65), (3, 151, 65), flags=8)
+   #cv2.floodFill(imgTmp, mask, (363, 345), (255, 255, 255), (3, 151, 65), (3, 151, 65), flags=8)
+   #cv2.floodFill(imgTmp, mask, (363, 345), (255, 255, 255), (3, 151, 65), (3, 151, 65), flags=8)
+   im = Image.fromarray(img)
+   path = Path(current_dir+'/images/'+'extracted.png')
+   im.save(path)
+
+# Transfer black as transparent and save new image
+  # img = Image.open(path)
+  # img = img.convert("RGBA")
+  # datas = img.getdata()
+  # mask_1D = mask.flatten() 
+  # index = 0
+  # newData = []
+  # for item in datas:
+  #     if item[0] == 0 and item[1] == 0 and item[2] == 0 and mask_1D[index] == 0:
+  #         newData.append((255, 255, 255, 0))
+  #     else:
+  #         newData.append(item)
+  #     index = index + 1
+
+  # img.putdata(newData)
+  # img.save(path)
+   img = ctk.CTkImage(Image.open(path), size=(200, 200))
+   label2 = ctk.CTkLabel(grabcut_textbox,text = "", image=img)
+   label2.place(x=0, y=0)
+def Stylize(stylize_textbox):
+        ITERATIONS=200
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        OUTPUT_DIR = current_dir+'/images/output/'
+        filename = filedialog.askopenfilename() 
+        print(filename)
+        
+        Image.open(filename).save(current_dir + "\images\style.jpg")
+        
+        simg = ctk.CTkImage(Image.open(current_dir + "\images\style.jpg"), size=(200, 200))
+        label3 = ctk.CTkLabel(stylize_textbox,text = "", image=simg)
+        label3.place(x=0, y=0)
+
+        start_time = time.time()
         with tf.device("/gpu:0"):
             with tf.compat.v1.Session() as sess:
-
+                image = Image.open(os.getcwd() + '\images\extracted.png')
+            
+                IMAGE_WIDTH = image.size[0]
+                IMAGE_HEIGHT = image.size[1]
                 # Load images.
-                content_image = utility.load_image(os.getcwd() + '\Stylization\Segmented Content\extracted.jpg', IMAGE_HEIGHT, IMAGE_WIDTH, invert=content_invert)
-                style_image = utility.load_image(os.getcwd() + '\Stylization\Style\style.jpg', IMAGE_HEIGHT, IMAGE_WIDTH, invert=style_invert)
-                #utility.save_image(OUTPUT_DIR+"/"+style_name+".jpg", style_image, invert = style_invert)
+                content_image = utility.load_image(os.getcwd() + '\images\extracted.png',
+                                                   200, 200, invert=1)
+
+                style_image = utility.load_image(os.getcwd() + '\images\style.jpg', 200,
+                                                 200, invert=1)
+                # utility.save_image(OUTPUT_DIR+"/"+style_name+".jpg", style_image, invert = style_invert)
 
                 # Load the model.
-                model = load_vgg_model(VGG_MODEL, IMAGE_HEIGHT, IMAGE_WIDTH, 3)
+                model = load_vgg_model(VGG_MODEL, 200, 200, 3)
                 # Content image as input image
                 initial_image = content_image.copy()
                 # Initialize all variables
@@ -198,7 +262,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 # Instantiate equation 7 of the paper.
                 total_loss = alpha * content_loss + beta * style_loss + gamma * shape_loss
 
-                # Then we minimize the total_loss, which is the equation 7.
                 optimizer = tf.compat.v1.train.AdamOptimizer(1.0)
                 train_step = optimizer.minimize(total_loss)
 
@@ -207,32 +270,30 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 for it in range(ITERATIONS + 1):
                     sess.run(train_step)
 
-                    if it % 10 == 0:
+                    if it % 100 == 0:
                         # Print every 10 iteration.
                         mixed_image = sess.run(model['input'])
-                        self.plainTextEdit.appendPlainText('Stylize the Content Image')
-                        self.plainTextEdit.appendPlainText('Iteration %d' % (it))
-                        self.plainTextEdit.appendPlainText('sum         : '+ str(sess.run(tf.reduce_sum(mixed_image))))
-                        self.plainTextEdit.appendPlainText('total_loss  : '+ str(sess.run(total_loss)))
-                        self.plainTextEdit.appendPlainText("content_loss: " + str(alpha * sess.run(content_loss)))
-                        self.plainTextEdit.appendPlainText("style_loss  : " + str(beta * sess.run(style_loss)))
-                        self.plainTextEdit.appendPlainText("shape loss  : "+ str(gamma * sess.run(shape_loss)))
+                      #  self.plainTextEdit.appendPlainText('Stylize the Content Image')
+                      #  self.plainTextEdit.appendPlainText('Iteration %d' % (it))
+                      #  self.plainTextEdit.appendPlainText('sum         : ' + str(sess.run(tf.reduce_sum(mixed_image))))
+                      #  self.plainTextEdit.appendPlainText('total_loss  : ' + str(sess.run(total_loss)))
+                      #  self.plainTextEdit.appendPlainText("content_loss: " + str(alpha * sess.run(content_loss)))
+                      #  self.plainTextEdit.appendPlainText("style_loss  : " + str(beta * sess.run(style_loss)))
+                      #  self.plainTextEdit.appendPlainText("shape loss  : " + str(gamma * sess.run(shape_loss)))
 
                         if not os.path.exists(OUTPUT_DIR):
                             os.mkdir(OUTPUT_DIR)
                         filename = OUTPUT_DIR + '/%d.jpg' % (it)
                         utility.save_image(filename, mixed_image, invert=result_invert)
-                        self.label_3.setPixmap(QtGui.QPixmap(filename))
                     if sess.run(total_loss) < 1:
                         break
             sess.close()
         end_time = time.time()
-        self.plainTextEdit.appendPlainText("Time taken = " + str(end_time - start_time))
-        self.plainTextEdit.appendPlainText("4 Stylized the extracted content image")
-        obj = OUTPUT_DIR + '/50.jpg'
-        im = cv2.imread(os.getcwd() + '/Stylization/Content/content.jpg')
-
-        self.label_3.setPixmap(QtGui.QPixmap(obj))
+        #self.plainTextEdit.appendPlainText("Time taken = " + str(end_time - start_time))
+        #self.plainTextEdit.appendPlainText("4 Stylized the extracted content image")
+        obj = OUTPUT_DIR + '/200.jpg'
+        im = cv2.imread(os.getcwd() + '/images/original.jpg')
+        im = cv2.resize(im, (200, 200))
         # Create an all white mask
         obj = cv2.imread(obj)
         mask = 255 * np.ones(obj.shape, obj.dtype)
@@ -243,19 +304,80 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         # Seamlessly clone src into dst and put the results in output
         clone = cv2.seamlessClone(obj, im, mask, center, cv2.MIXED_CLONE)
-       # mixed_clone = cv2.seamlessClone(obj, im, mask, center, cv2.MIXED_CLONE)
+        # mixed_clone = cv2.seamlessClone(obj, im, mask, center, cv2.MIXED_CLONE)
 
         # Write results
-        cv2.imwrite(OUTPUT_DIR+"\merged.jpg", clone)
-        self.label_3.setPixmap(QtGui.QPixmap(OUTPUT_DIR+"\merged.jpg"))
-        self.stackedWidget.setCurrentIndex(0)  # 打开 stackedWidget > page_0
-        return
-    def __init__(self, parent=None):
-        super(MyMainWindow, self).__init__(parent)
-        self.setupUi(self)
+        path =  os.getcwd() + '/images/result.jpg'
+        cv2.imwrite(path, clone)
+        resimg = ctk.CTkImage(Image.open(path), size=(200, 200))
+        label3 = ctk.CTkLabel(stylize_textbox,text = "", image=resimg)
+        label3.place(x=0, y=0)
+        
+        #self.label_3.setPixmap(QtGui.QPixmap(OUTPUT_DIR + "\merged.jpg"))
+        #self.stackedWidget.setCurrentIndex(0)  # 打开 stackedWidget > page_0    
+    
+def create_ui_components(root):
+    ctk.set_appearance_mode("dark")
+    ctk.set_default_color_theme("dark-blue")
+    root.title("Cloths Stylization Assistant")
+    root.configure(bg='#252422')
+    root.geometry("680x310")
+    root.resizable(width=False, height=False)
+    font_size = 20
 
-if __name__ == '__main__':
-    mainapp = QApplication(sys.argv)  # 在 QApplication 方法中使用，创建应用程序对象
-    myWin = MyMainWindow()  # 实例化 MyMainWindow 类，创建主窗口
-    myWin.show()  # 在桌面显示控件 myWin
-    sys.exit(mainapp.exec_())  # 结束进程，退出程序
+    upload_textbox = ctk.CTkTextbox(root, width=200, font=("Arial", font_size), text_color='#639cdc', wrap="word")
+    #upload_textbox.grid(row=0, column=0, padx=10, pady=20, sticky="nsew")
+    upload_textbox.place(x=20, y=20)
+    grabcut_textbox = ctk.CTkTextbox(root, width=200, font=("Arial", font_size), text_color='#639cdc', wrap="word")
+    #grabcut_textbox.grid(row=0, column=1, padx=10, pady=20, sticky="nsew")
+    grabcut_textbox.place(x=240, y=20)
+    stylize_textbox = ctk.CTkTextbox(root, width=200, font=("Arial", font_size), text_color='#639cdc', wrap="word")
+    #stylize_textbox.grid(row=0, column=2, padx=10, pady=20, sticky="nsew")
+    stylize_textbox.place(x=460, y=20)
+    upload_button = ctk.CTkButton(root, width=200, text="Upload Image", command=lambda: UploadAction(upload_textbox))
+    #upload_button.grid(row=1, column=0, padx=10, pady=1, sticky="nsew")
+    upload_button.place(x=20, y=240)
+    grabcut_button = ctk.CTkButton(root, width=200, text="GrabCut", command=lambda: GrabCut(grabcut_textbox))
+    #grabcut_button.grid(row=1, column=1, padx=10, pady=1, sticky="nsew")
+    grabcut_button.place(x=240, y=240)
+    stylize_button = ctk.CTkButton(root, width=200, text="Stylize", command=lambda: Stylize(stylize_textbox))
+    #stylize_button.grid(row=1, column=2, padx=10, pady=1, sticky="nsew")
+    stylize_button.place(x=460, y=240)
+
+def UploadAction(upload_textbox): 
+    current_dir = current_directory = os.path.dirname(os.path.abspath(__file__))
+    filename = filedialog.askopenfilename() 
+    img = ctk.CTkImage(Image.open(filename), size=(200, 200))    
+    label = ctk.CTkLabel(upload_textbox,text = "", image=img)
+    label.place(x=0, y=0)
+    im = Image.open(filename)
+    im.resize((200, 200))
+    im.save(current_dir + "\images\original.jpg")
+def main():
+
+    root = ctk.CTk()
+    create_ui_components(root)
+
+
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_rowconfigure(1, weight=1)
+   # root.grid_rowconfigure(2, weight=1)
+    #root.grid_rowconfigure(3, weight=1)
+    root.grid_columnconfigure(0, weight=1)
+    root.grid_columnconfigure(1, weight=1)
+    root.grid_columnconfigure(2, weight=1)
+
+     # Add the clear transcript button to the UI
+   # clear_transcript_button = ctk.CTkButton(root, text="Upload Image", command=lambda: clear_context(transcriber, audio_queue, ))
+   # clear_transcript_button.grid(row=1, column=0, padx=10, pady=3, sticky="nsew")
+
+    #freeze_state = [False]  # Using list to be able to change its content inside inner functions
+    #def freeze_unfreeze():
+    #    freeze_state[0] = not freeze_state[0]  # Invert the freeze state
+    #    freeze_button.configure(text="Unfreeze" if freeze_state[0] else "Freeze")
+
+   # freeze_button.configure(command=freeze_unfreeze)
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
