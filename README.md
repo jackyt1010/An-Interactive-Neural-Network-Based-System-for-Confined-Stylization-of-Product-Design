@@ -18,7 +18,7 @@ for this research project.
 ## Requirement
 Operating system: Windows 10 <br />
 Programming Langauge: Python 3
-External Python Libraries: Please refer to the [requirements.txt] (https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Confined-Stylization-of-Product-Design/blob/main/requirements.txt))
+External Python Libraries: Please refer to the [requirements.txt](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Confined-Stylization-of-Product-Design/blob/main/requirements.txt)
 
 ## Installation
 
@@ -35,7 +35,7 @@ This project is licensed under MIT License.
 ## Reference
 * [An Interactive Neural Network-Based System for Confined Stylization of Product Design](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/edit/main/README.md)
 
-Man-Kit, Tang.”An Interactive Neural Network-Based System for Confined Stylization of Product Design”. In: International Conference on Design and Semantics of Form and Movement (DesForM 2023).2023.
+ Man-Kit, Tang.”An Interactive Neural Network-Based System for Confined Stylization of Product Design”. In: International Conference on Design and Semantics of Form and Movement [(DesForM 2023](https://www.desform2023.org/)).2023.
 * [Constrained Neural Style Transfer for Decorated Logo Generation](https://github.com/gttugsuu/Constrained-Neural-Style-Transfer-for-Decorated-Logo-Generation)
 * [Grab Cut Algorithm Implementation](https://github.com/louisfb01/iterative-grabcut)
 * [The Music used for the creation of the demo video](https://imperss.bandcamp.com/track/reflection)
