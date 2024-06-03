@@ -22,7 +22,7 @@ External Python Libraries: Please refer to the [requirements.txt] (https://githu
 
 ## Installation
 
-```pip3 install -r requirements.txt```[copy-button]
+```pip3 install -r requirements.txt[copy-button]```
 
 ## Execution
 To run the application, please first download the [VGG-19 model](https://mega.nz/file/QDElFIZY#Gk99DLTosoDI-gvB8Fg6YvaBNDhVMyLptVJfeV_tDrY) into the main project directory and simply click the [run.bat](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/blob/main/run.bat) to start.
