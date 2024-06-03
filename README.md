@@ -17,7 +17,7 @@ for this research project.
 
 ## Requirement
 Operating system: Windows 10 <br />
-Programming Langauge: Python 3
+Programming Langauge: Python 3 <br />
 External Python Libraries: Please refer to the [requirements.txt](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Confined-Stylization-of-Product-Design/blob/main/requirements.txt)
 
 ## Installation
