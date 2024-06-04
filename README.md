@@ -30,7 +30,7 @@ To run the application, please first download the [VGG-19 model](https://mega.nz
 
 ## Usage
 The following screenshot shows the completed execution of the GUI of the Python application after clickling the run.bat
-(https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/blob/main/gui.jpg)
+![](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/blob/main/gui.jpg)
 
 ## License
 
