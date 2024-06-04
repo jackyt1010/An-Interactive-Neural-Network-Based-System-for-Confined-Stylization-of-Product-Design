@@ -12,6 +12,7 @@ for this research project.
 - [System Requirements](#Requirement)
 - [Installation](#Installation)
 - [Run the Application](#Execution)
+- [Usage](#Usage)
 - [License](#license)
 - [Reference](#Reference)
 
@@ -27,6 +28,9 @@ External Python Libraries: Please refer to the [requirements.txt](https://github
 ## Execution
 To run the application, please first download the [VGG-19 model](https://mega.nz/file/QDElFIZY#Gk99DLTosoDI-gvB8Fg6YvaBNDhVMyLptVJfeV_tDrY) into the main project directory and simply click the [run.bat](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/blob/main/run.bat) to start.
 
+## Usage
+The following screenshot shows the completed execution of the GUI of the Python application after clickling the run.bat
+(https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/blob/main/gui.jpg)
 
 ## License
 
