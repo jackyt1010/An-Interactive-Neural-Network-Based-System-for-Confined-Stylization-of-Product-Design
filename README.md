@@ -44,4 +44,4 @@ This project is licensed under MIT License.
  Man-Kit, Tang.”An Interactive Neural Network-Based System for Confined Stylization of Product Design”. In: Proceedings of 8th International Conference on Design and Semantics of Form and Movement [(DesForM 2023](https://www.desform2023.org/)), p.101-107, June 2023.
 * [Constrained Neural Style Transfer for Decorated Logo Generation](https://github.com/gttugsuu/Constrained-Neural-Style-Transfer-for-Decorated-Logo-Generation)
 * [Grab Cut Algorithm Implementation](https://github.com/louisfb01/iterative-grabcut)
-* [The Music used for the creation of the demo video](https://imperss.bandcamp.com/track/reflection)
+
