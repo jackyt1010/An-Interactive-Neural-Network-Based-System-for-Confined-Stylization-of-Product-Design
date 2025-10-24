@@ -40,8 +40,7 @@ This project is licensed under MIT License.
 
 ## Reference
 * [An Interactive Neural Network-Based System for Confined Stylization of Product Design](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/edit/main/README.md)
-
- Man-Kit, Tang.”An Interactive Neural Network-Based System for Confined Stylization of Product Design”. In: Proceedings of 12th International Conference on Design and Semantics of Form and Movement [(DesForM 2023](https://www.desform2023.org/)), p.102-108, July 2023.
+Tang, Man Kit.”An Interactive Neural Network-Based System for Confined Stylization of Product Design”.12 th International Conference on Design and Semantics of Form and Movement 2023: 271-278.
 * [Constrained Neural Style Transfer for Decorated Logo Generation](https://github.com/gttugsuu/Constrained-Neural-Style-Transfer-for-Decorated-Logo-Generation)
 * [Grab Cut Algorithm Implementation](https://github.com/louisfb01/iterative-grabcut)
 
