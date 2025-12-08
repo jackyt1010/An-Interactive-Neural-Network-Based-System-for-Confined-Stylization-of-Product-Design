@@ -31,7 +31,7 @@ To run the application, please first download the [VGG-19 model](https://drive.g
 ## Usage
 The following screenshot shows the completed execution result of the GUI of the Python application after clickling the run.bat
 ![](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/blob/main/gui.jpg)
-
+When you use the funationallity "GrabCut", you need to press the "Enter" button twice in order to make the content image to be segmented successfully
 The sample of original images and style images are stored in the content folder and style folder respectively, the final stylized image is stored in the images folder as result.jpg
 
 ## License
