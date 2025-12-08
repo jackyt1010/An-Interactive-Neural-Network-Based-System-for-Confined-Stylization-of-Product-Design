@@ -1,4 +1,5 @@
 Pillow
+matplotlib
 openai-whisper==20230314
 Wave==0.0.2
 openai==0.27.6
