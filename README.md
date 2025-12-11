@@ -1,4 +1,4 @@
-A localized NeuralStyleTransfer for Fashionable Product Image based on VGG-19(Initial Version)
+A localized NeuralStyleTransfer System for Fashionable Product Image based on VGG-19(Initial Version)
 ======================
 
 Neural Style Transfer is a task of transferring style
