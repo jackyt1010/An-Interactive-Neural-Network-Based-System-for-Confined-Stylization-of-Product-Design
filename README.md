@@ -4,7 +4,7 @@ A localized NeuralStyleTransfer System for Fashionable Product Image based on VG
 Neural Style Transfer is a task of transferring style
 of one image to another. It is accomplished by using features of some pretrained model.
 In this project, the employed model was used for localized stylization of specific shape
-of the product image.GrabCut Algorithm and Region-Confined Stylization are being employed
+of the product image.GrabCut Algorithm and Region-Confined Stylization are used
 for this research project.
 
 ## Table of content
@@ -26,7 +26,7 @@ External Python Libraries: Please refer to the [requirements.txt](https://github
 ```pip3 install -r requirements.txt```
 
 ## Execution
-To run the application, please first download the [VGG-19 model](https://drive.google.com/open?id=1iF4oKdb-5-45AAmGIwaJyMNcjI9xJZ2i) into the main project directory and simply click the [run.bat](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/blob/main/run.bat) to start.
+To run the application, please first download the [VGG-19 model](https://drive.google.com/open?id=1iF4oKdb-5-45AAmGIwaJyMNcjI9xJZ2i) into the main project directory and simply click the [run.bat](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Contained-Stylization-of-Product-Design/blob/main/run.bat) to start the application.
 
 ## Usage
 The following screenshot shows the completed execution result of the GUI of the Python application after clickling the run.bat
