@@ -37,7 +37,7 @@ When you click the button "GrabCut" and later use the functionalties of the "Gra
 The sample of original images and style images are stored in the content folder and style folder respectively, the final stylized image is stored in the images folder as result.jpg
 
 ## Poster
-![](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Confined-Stylization-of-Product-Design/blob/main/Poster-An%20Interactive%20Neural%20Network-Based%20System%20for%20Confined%20Stylization%20of%20Product%20Design.pdf)
+![]([https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Confined-Stylization-of-Product-Design/blob/main/Poster-An%20Interactive%20Neural%20Network-Based%20System%20for%20Confined%20Stylization%20of%20Product%20Design.pdf](https://github.com/jackyt1010/An-Interactive-Neural-Network-Based-System-for-Confined-Stylization-of-Product-Design/blob/main/poster.png)
 
 ## License
 
